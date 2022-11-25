@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
-//use std::env;
 use clap::Parser;
 use std::fs;
+use std::os::linux::fs::MetadataExt;
 
 #[derive(Parser)]
 #[command(name = "Rust-ls")]
@@ -16,6 +16,9 @@ struct Cli {
 
     #[arg(short, long, action = clap::ArgAction::SetTrue)]
     all: Option<bool>,
+
+    #[arg(short, long, action = clap::ArgAction::SetTrue)]
+    long: Option<bool>,
 }
 
 
@@ -31,12 +34,24 @@ fn main() {
 
     for path in paths {
 
-        let file_name: String = path.unwrap().path().file_name().unwrap().to_str().unwrap().to_string();
+        let file_name: String = path.as_ref().unwrap().path().file_name().unwrap().to_str().unwrap().to_string();
+
         if (file_name.chars().nth(0).unwrap() == '.') && (args.all.unwrap() == false) {
             continue;
         }
+        else if args.long.unwrap() == true {
+            // println!("{0: <10} | {1: <10} | {2: <10} | {3: <10}", 0, 0, 0, 0);
+            // https://doc.rust-lang.org/std/fmt/
+            println!(
+                "{0: <25} | {1: ^10} | {2: ^10} | {3: ^10} |", 
+                file_name, 
+                fs::metadata(path.as_ref().unwrap().path()).ok().unwrap().st_uid(), 
+                fs::metadata(path.as_ref().unwrap().path()).ok().unwrap().st_gid(),
+                fs::metadata(path.as_ref().unwrap().path()).ok().unwrap().st_size(),
+            );
+        }
         else {
-            print!("{} \n", file_name);
+            println!("{}", file_name);
         }
     }
 }
