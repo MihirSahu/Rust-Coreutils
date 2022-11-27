@@ -17,6 +17,7 @@ struct Cli {
     insensitive: Option<bool>,
 
     #[arg(short, long)]
+    // Doesn't check for out of bounds!!!
     context: Option<usize>,
 
     pattern: Option<String>,
@@ -48,21 +49,37 @@ fn main() {
         let contents = fs::read_to_string(args.path.unwrap());
 
         if args.insensitive.unwrap() == true {
-            match contents.as_ref().unwrap().to_lowercase().find(&args.pattern.as_ref().unwrap().to_lowercase()) {
-                Some(index) => println!("{}{}{}", 
-                    &contents.as_ref().unwrap()[index - context..index], 
-                    &contents.as_ref().unwrap()[index..index + args.pattern.as_ref().unwrap().len()].blue(), 
-                    &contents.as_ref().unwrap()[index + args.pattern.as_ref().unwrap().len()..index + args.pattern.unwrap().len() + context]),
-                None => println!("Could not find pattern"),
+
+            let contents_lowercase = contents.as_ref().unwrap().to_lowercase();
+            let matches: Vec<_> = contents_lowercase.match_indices(&args.pattern.as_ref().unwrap().to_lowercase()).collect();
+
+            match matches.len() {
+                0 => println!("Could not find pattern"),
+                _ => {
+                    for i in matches {
+                        let index = i.0;
+                        println!("{}{}{}", 
+                            &contents.as_ref().unwrap()[index - context..index], 
+                            &contents.as_ref().unwrap()[index..index + args.pattern.as_ref().unwrap().len()].blue(), 
+                            &contents.as_ref().unwrap()[index + args.pattern.as_ref().unwrap().len()..index + args.pattern.as_ref().unwrap().len() + context])
+                    }
+                },
             }
         }
         else {
-            match contents.as_ref().unwrap().find(args.pattern.as_ref().unwrap()) {
-                Some(index) => println!("{}{}{}", 
-                    &contents.as_ref().unwrap()[index - context..index], 
-                    &contents.as_ref().unwrap()[index..index + args.pattern.as_ref().unwrap().len()].blue(), 
-                    &contents.as_ref().unwrap()[index + args.pattern.as_ref().unwrap().len()..index + args.pattern.unwrap().len() + context]),
-                None => println!("Could not find pattern"),
+            let matches: Vec<_> = contents.as_ref().unwrap().match_indices(args.pattern.as_ref().unwrap()).collect();
+
+            match matches.len() {
+                0 => println!("Could not find pattern"),
+                _ => {
+                    for i in matches {
+                        let index = i.0;
+                        println!("{}{}{}", 
+                            &contents.as_ref().unwrap()[index - context..index], 
+                            &contents.as_ref().unwrap()[index..index + args.pattern.as_ref().unwrap().len()].blue(), 
+                            &contents.as_ref().unwrap()[index + args.pattern.as_ref().unwrap().len()..index + args.pattern.as_ref().unwrap().len() + context])
+                    }
+                },
             }
         }
     }
